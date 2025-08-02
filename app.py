@@ -1,10 +1,20 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 from datetime import date
+import os
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
+
+# -------------------------
+# Database Configuration
+# -------------------------
+uri = os.environ.get('DATABASE_URL', 'sqlite:///database.db')  # fallback for local
+if uri.startswith("postgres://"):
+    uri = uri.replace("postgres://", "postgresql://", 1)
+
+app.config['SQLALCHEMY_DATABASE_URI'] = uri
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
 db = SQLAlchemy(app)
 
 # -------------------------
@@ -28,13 +38,13 @@ class Attendance(db.Model):
     status = db.Column(db.String(20), nullable=False)  # "Present" or "Absent"
 
 # -------------------------
-# Create tables automatically
+# Initialize Database
 # -------------------------
 with app.app_context():
     db.create_all()
 
 # -------------------------
-# Routes
+# Main Routes
 # -------------------------
 @app.route('/')
 def index():
@@ -59,5 +69,38 @@ def mark_attendance():
     db.session.commit()
     return jsonify({'message': 'Attendance recorded successfully!'})
 
+# -------------------------
+# Admin Routes
+# -------------------------
+@app.route('/admin', methods=['GET'])
+def admin():
+    classes = Class.query.all()
+    return render_template('admin.html', classes=classes)
+
+@app.route('/admin/add_class', methods=['POST'])
+def add_class():
+    class_name = request.form.get('class_name')
+    if class_name:
+        new_class = Class(name=class_name)
+        db.session.add(new_class)
+        db.session.commit()
+    return redirect(url_for('admin'))
+
+@app.route('/admin/add_student', methods=['POST'])
+def add_student():
+    student_name = request.form.get('student_name')
+    student_email = request.form.get('student_email')
+    class_id = request.form.get('class_id')
+
+    if student_name and class_id:
+        new_student = Student(name=student_name, email=student_email, class_id=class_id)
+        db.session.add(new_student)
+        db.session.commit()
+    return redirect(url_for('admin'))
+
+# -------------------------
+# Run App
+# -------------------------
 if __name__ == '__main__':
     app.run(debug=True)
+

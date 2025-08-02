@@ -8,9 +8,13 @@ app = Flask(__name__)
 # -------------------------
 # Database Configuration
 # -------------------------
-uri = os.environ.get('DATABASE_URL', 'sqlite:///database.db')  # fallback for local
+uri = os.environ.get('DATABASE_URL', 'sqlite:///database.db')  # fallback for local testing
+
+# Render provides postgres:// but SQLAlchemy with psycopg3 needs postgresql+psycopg://
 if uri.startswith("postgres://"):
-    uri = uri.replace("postgres://", "postgresql://", 1)
+    uri = uri.replace("postgres://", "postgresql+psycopg://", 1)
+elif uri.startswith("postgresql://") and "+psycopg" not in uri:
+    uri = uri.replace("postgresql://", "postgresql+psycopg://", 1)
 
 app.config['SQLALCHEMY_DATABASE_URI'] = uri
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -21,17 +25,20 @@ db = SQLAlchemy(app)
 # Database Models
 # -------------------------
 class Class(db.Model):
+    __tablename__ = 'class'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     students = db.relationship('Student', backref='class_', lazy=True)
 
 class Student(db.Model):
+    __tablename__ = 'student'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=True)
     class_id = db.Column(db.Integer, db.ForeignKey('class.id'), nullable=False)
 
 class Attendance(db.Model):
+    __tablename__ = 'attendance'
     id = db.Column(db.Integer, primary_key=True)
     student_id = db.Column(db.Integer, db.ForeignKey('student.id'), nullable=False)
     date = db.Column(db.Date, default=date.today)
@@ -59,7 +66,7 @@ def get_students(class_id):
 @app.route('/attendance', methods=['POST'])
 def mark_attendance():
     data = request.json
-    for entry in data['attendance']:
+    for entry in data.get('attendance', []):
         new_attendance = Attendance(
             student_id=entry['student_id'],
             date=date.today(),
@@ -103,4 +110,3 @@ def add_student():
 # -------------------------
 if __name__ == '__main__':
     app.run(debug=True)
-

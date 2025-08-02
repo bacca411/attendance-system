@@ -1,4 +1,3 @@
-# app.py
 from flask import Flask, render_template, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from datetime import date
@@ -29,6 +28,12 @@ class Attendance(db.Model):
     status = db.Column(db.String(20), nullable=False)  # "Present" or "Absent"
 
 # -------------------------
+# Create tables automatically
+# -------------------------
+with app.app_context():
+    db.create_all()
+
+# -------------------------
 # Routes
 # -------------------------
 @app.route('/')
@@ -55,5 +60,4 @@ def mark_attendance():
     return jsonify({'message': 'Attendance recorded successfully!'})
 
 if __name__ == '__main__':
-    db.create_all()  # Create tables if not exist
     app.run(debug=True)

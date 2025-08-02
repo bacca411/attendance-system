@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attendance System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Class Attendance System</h1>
+
+        <!-- Class Selection -->
+        <label for="classSelect">Select Class:</label>
+        <select id="classSelect">
+            <option value="">--Select a Class--</option>
+            {% for class_ in classes %}
+            <option value="{{ class_.id }}">{{ class_.name }}</option>
+            {% endfor %}
+        </select>
+
+        <!-- Students Table -->
+        <div id="studentsContainer" class="hidden">
+            <h2>Mark Attendance</h2>
+            <form id="attendanceForm">
+                <table id="studentsTable">
+                    <thead>
+                        <tr>
+                            <th>Student Name</th>
+                            <th>Present</th>
+                            <th>Absent</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+                <button type="submit">Submit Attendance</button>
+            </form>
+        </div>
+
+        <div id="message" class="hidden"></div>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

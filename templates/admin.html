@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Panel</title>
+</head>
+<body>
+    <h1>Admin - Manage Classes & Students</h1>
+
+    <h2>Add Class</h2>
+    <form method="POST" action="/admin/add_class">
+        <input type="text" name="class_name" placeholder="Class Name" required>
+        <button type="submit">Add Class</button>
+    </form>
+
+    <h2>Add Student</h2>
+    <form method="POST" action="/admin/add_student">
+        <input type="text" name="student_name" placeholder="Student Name" required>
+        <input type="email" name="student_email" placeholder="Email (optional)">
+        <select name="class_id" required>
+            <option value="">Select Class</option>
+            {% for class_ in classes %}
+                <option value="{{ class_.id }}">{{ class_.name }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit">Add Student</button>
+    </form>
+
+    <h2>Current Classes & Students</h2>
+    {% for class_ in classes %}
+        <h3>{{ class_.name }}</h3>
+        <ul>
+            {% for student in class_.students %}
+                <li>{{ student.name }}{% if student.email %} ({{ student.email }}){% endif %}</li>
+            {% else %}
+                <li>No students yet</li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No classes yet.</p>
+    {% endfor %}
+</body>
+</html>

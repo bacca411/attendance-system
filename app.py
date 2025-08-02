@@ -8,12 +8,12 @@ app = Flask(__name__)
 # -------------------------
 # Database Configuration
 # -------------------------
-uri = os.environ.get('DATABASE_URL', 'sqlite:///database.db')  # fallback for local testing
+uri = os.environ.get('DATABASE_URL', 'sqlite:///database.db').strip()
 
-# Render provides postgres:// but SQLAlchemy with psycopg3 needs postgresql+psycopg://
+# Normalize PostgreSQL URI for SQLAlchemy + psycopg3
 if uri.startswith("postgres://"):
     uri = uri.replace("postgres://", "postgresql+psycopg://", 1)
-elif uri.startswith("postgresql://") and "+psycopg" not in uri:
+elif uri.startswith("postgresql://"):
     uri = uri.replace("postgresql://", "postgresql+psycopg://", 1)
 
 app.config['SQLALCHEMY_DATABASE_URI'] = uri
@@ -66,7 +66,7 @@ def get_students(class_id):
 @app.route('/attendance', methods=['POST'])
 def mark_attendance():
     data = request.json
-    for entry in data.get('attendance', []):
+    for entry in data['attendance']:
         new_attendance = Attendance(
             student_id=entry['student_id'],
             date=date.today(),
